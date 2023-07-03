@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
+    <title>WebRTC Video Streaming Test (Ondemand)</title>
+  </head>
+  <body>
+    <h1>WebRTC Video Streaming Test (Ondemand)</h1>
+    <content>
+      <canvas id="canvas" width="320" height="240"></canvas>
+      <audio id="audioStream" playsinline></audio>
+      <div>
+        <button id="startButton">start</button>
+        <button id="stopButton">stop</button>
+      </div>
+      <div>
+        <span id="info"></span>
+        <span id="description"><a href="https://github.com/meetecho/janus-gateway">Janus WebRTC Server</a>で音声トラック(wav)をクライアントにオンデマンド配信.<br>
+          注) startを押すと音がでます.</span>
+      </div>
+    </content>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/8.2.2/adapter.min.js" ></script>
+    <script type="text/javascript" src="janus.js" ></script>
+    <script type="text/javascript" src="main.js" ></script>
+  </body>
+</html>
