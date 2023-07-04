@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "stream"
+version = "0.1.0"
+description = ""
+authors = ["ryohei.tanaka"]
+license = "LGPL"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+# libcairo2-dev
+# libgirepository1.0-dev
+pygobject = "^3.44.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
