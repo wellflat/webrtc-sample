@@ -1,0 +1,24 @@
+version: '3' 
+
+services:
+  janus:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    image: janus-test
+    container_name: janus
+    ports:
+      - 8088:8088
+      - 8089:8089
+      - 8188:8188
+      - 8989:8989
+      - 5002:5002
+      - 10000-10099:10000-10099/udp
+    restart: on-failure
+    volumes:
+      - ./conf:/opt/janus/etc/janus
+    logging:
+      driver: json-file
+      options:
+        max-file: '1' 
+        max-size: 5m

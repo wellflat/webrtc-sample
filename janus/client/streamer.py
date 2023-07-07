@@ -54,7 +54,7 @@ class AudioRTPStreamer():
 
         self.state = Gst.State.NULL
         self.pipeline.set_state(self.state)
-        print('close')
+        print('close session')
 
     def pause(self):
         self.state = Gst.State.PAUSED
@@ -66,8 +66,7 @@ class AudioRTPStreamer():
             #loop.quit()
             self.state = Gst.State.READY
             self.pipeline.set_state(self.state)
-            ## TODO file changed
-            self.set_audio_path('../data/sample.wav')
+            #self.set_audio_path('../data/sample.wav')
             print('play')
             self.state = Gst.State.PLAYING
             self.pipeline.set_state(self.state)
@@ -107,8 +106,10 @@ class AudioRTPStreamer():
 
 if __name__ == '__main__':
     streamer = AudioRTPStreamer()
-    wav_filepath = '../data/sample.wav'
+    wav_filepath = '../../data/long.wav'
     #wav_filepath = sys.argv[1]
-    audio_list = ['../data/short.wav', '../data/sample.wav', '../data/long.wav']
+    base_path = '../../data'
+    audio_list = ['short.wav', 'sample.wav', 'long.wav']
     streamer.set_audio_path(wav_filepath)
+    #streamer.set_udp_destination('172.18.0.2', 5002)
     streamer.run()
