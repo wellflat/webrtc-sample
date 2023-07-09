@@ -2,7 +2,7 @@
 FROM ubuntu:jammy AS build
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Build phase
+# Multi stage build, Build phase
 # Create workdir
 RUN mkdir /build
 
@@ -31,7 +31,7 @@ RUN \
 RUN \
   apt-get update && \
   apt-get install -y \
-	  libssl-dev \
+    libssl-dev \
     libglib2.0-dev \
     python3 \
     python3-pip \
@@ -54,7 +54,7 @@ RUN \
 RUN \
   apt-get update && \
   apt-get install -y \
-	  libssl-dev
+    libssl-dev
 
 # Build libsrtp from sources as one shipped with ubuntu does not support AES-GCM profiles
 # This needs to use /usr or /usr/local as a prefix.
@@ -74,19 +74,19 @@ RUN \
   apt-get install -y \
     build-essential \
     libwebsockets-dev \
-	  libssl-dev \
+    libssl-dev \
     libglib2.0-dev \
     libmicrohttpd-dev \
     libjansson-dev \
     libsofia-sip-ua-dev \
-	  libopus-dev \
+    libopus-dev \
     libogg-dev \
     libavcodec-dev \
     libavformat-dev \
     libavutil-dev \
     libcurl4-openssl-dev \
     liblua5.3-dev \
-	  libconfig-dev \
+    libconfig-dev \
     gengetopt
 
 # Build janus-gateway from sources
@@ -119,9 +119,9 @@ RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSI
     && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
     && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
 
-# Multi stage build, package phase
+# Multi stage build, Package phase
 FROM ubuntu:jammy
-ARG app_uid=999
+ARG janus_uid=999
 ARG ulimit_nofile_soft=524288
 ARG ulimit_nofile_hard=1048576
 
@@ -130,19 +130,19 @@ RUN \
   apt-get update && \
   apt-get install -y \
     libwebsockets16 \
-	  libssl3 \
+    libssl3 \
     libglib2.0-0 \
     libmicrohttpd12 \
     libjansson4 \
     libsofia-sip-ua-glib3 \
-	  libopus0 \
+    libopus0 \
     libogg0 \
     libavcodec58 \
     libavformat58 \
     libavutil56 \
     libcurl4 \
     liblua5.3-0 \
-	  libconfig9 && \
+    libconfig9 && \
  rm -rf /var/lib/apt/lists/*
 
 # Copy all things that were built
@@ -151,11 +151,11 @@ COPY --from=build /opt/janus /opt/janus
 
 # Set ulimits
 RUN \
-  echo ":${app_uid}	soft	nofile	${ulimit_nofile_soft}" > /etc/security/limits.conf && \
-  echo ":${app_uid}	hard	nofile	${ulimit_nofile_hard}" >> /etc/security/limits.conf
+  echo ":${janus_uid}	soft	nofile	${ulimit_nofile_soft}" > /etc/security/limits.conf && \
+  echo ":${janus_uid}	hard	nofile	${ulimit_nofile_hard}" >> /etc/security/limits.conf
 
 # Do not run as root unless necessary
-RUN groupadd -g ${app_uid} app && useradd -r -u ${app_uid} -g app app
+RUN groupadd -g ${janus_uid} janus && useradd -r -u ${janus_uid} -g janus janus
 
 # Copy entrypoint and config templates
 COPY entrypoint.sh /entrypoint.sh
@@ -164,4 +164,4 @@ ADD conf /conf
 
 # Start the gateway
 ENV LD_LIBRARY_PATH=/opt/janus/lib/janus:/usr/local/lib:/usr/local/lib/x86_64-linux-gnu
-CMD /entrypoint.sh
+CMD ./entrypoint.sh

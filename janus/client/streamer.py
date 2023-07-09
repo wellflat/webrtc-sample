@@ -111,5 +111,5 @@ if __name__ == '__main__':
     base_path = '../../data'
     audio_list = ['short.wav', 'sample.wav', 'long.wav']
     streamer.set_audio_path(wav_filepath)
-    #streamer.set_udp_destination('172.18.0.2', 5002)
+    streamer.set_udp_destination('172.19.0.2', 5002)
     streamer.run()

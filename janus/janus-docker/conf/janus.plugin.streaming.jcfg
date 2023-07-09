@@ -133,13 +133,14 @@ general: {
 # plugins/streams folder sends to. Whatever is sent to those ports will
 # be the source of a WebRTC broadcast users can subscribe to.
 #
-rtp-sample: {
+audio-stream: {
 	type = "rtp"
 	id = 1
-	description = "Opus/VP8 live stream coming from external source"
-	metadata = "You can use this metadata section to put any info you want!"
+	description = "Opus live stream coming from gstreamer"
+	metadata = "opus/rtp/gstreamer"
 	audio = true
-	video = true
+	video = false
+	data = false
 	audioport = 5002
 	audiopt = 111
 	audiocodec = "opus"
