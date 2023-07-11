@@ -1,19 +1,22 @@
 #!/usr/bin/python3
+# pyright: reportGeneralTypeIssues=false
 
+import signal
 import sys
+import time
+from types import FrameType
 import gi
 gi.require_version('Gst', '1.0')
-from gi.repository import GLib, GObject, Gst
-import time
-
+from gi.repository import Gst
+from gi.overrides import GLib
 
 # TODO: error handling
 class AudioRTPStreamer():
 
-    def __init__(self, filepath: str=None):
+    def __init__(self):
         start = time.perf_counter_ns()
 
-        Gst.init(sys.argv[1:])
+        Gst.init(None)
         self.state = Gst.State.NULL
         element = Gst.ElementFactory.make
         self.filesrc = element('filesrc')
@@ -22,28 +25,30 @@ class AudioRTPStreamer():
         self.opusenc = element('opusenc')
         self.rtpopuspay = element('rtpopuspay')
         self.udpsink = element('udpsink')
-        self.set_audio_bitrate()  ## bitrate: default 20000
+        self.set_audio_bitrate()    ## bitrate: default 20000
         self.set_udp_destination()  ## udp destination: default localhost:5002
-        if filepath:
-            self.set_audio_path(filepath)
-
         self.__build_pipeline()
         self.__prepare_stream()
 
-        end = time.perf_counter_ns()
-        print(f'{(end - start) / 1000000} msec')
+        signal.signal(signal.SIGTERM, self.__signal_handler)
 
-    def set_audio_path(self, filepath: str):
+        end = time.perf_counter_ns()
+        print(f'initialize: {(end - start) / 1000000} msec')
+
+    def set_audio_path(self, filepath: str) -> None:
         self.filesrc.set_property('location', filepath)
 
-    def set_audio_bitrate(self, bitrate: int=20000):
+    def set_audio_bitrate(self, bitrate: int=20000) -> None:
         self.opusenc.set_property('bitrate', bitrate)
 
-    def set_udp_destination(self, host: str='127.0.0.1', port: int=5002):
+    def set_udp_destination(self, host: str='127.0.0.1', port: int=5002) -> None:
         self.udpsink.set_property('host', host)
         self.udpsink.set_property('port', port)
 
-    def run(self):
+    def run(self) -> None:
+        if not self.filesrc.get_property('location'):
+            raise FileNotFoundError()
+        
         print('play')
         self.state = Gst.State.PLAYING
         self.pipeline.set_state(self.state)
@@ -54,25 +59,35 @@ class AudioRTPStreamer():
 
         self.state = Gst.State.NULL
         self.pipeline.set_state(self.state)
-        print('close session')
+        print('stop')
 
     def pause(self):
-        self.state = Gst.State.PAUSED
-        self.pipeline.set_state(self.state)
+        print('pause')
+        if self.state == Gst.State.PLAYING:
+            self.state = Gst.State.READY
+            self.pipeline.set_state(self.state)
+    
+    # TODO: using GObject signal
+    def __signal_handler(self, signum: int, frame: FrameType | None):
+        print(f'received: {signum}')
+        self.pause()
+        self.run()
 
-    def __bus_callback(self, bus, message, loop):
+    def __bus_callback(self, bus: Gst.Bus, message: Gst.Message, loop: GLib.MainLoop):
         if message.type == Gst.MessageType.EOS:
             print('end of stream')
-            #loop.quit()
             self.state = Gst.State.READY
             self.pipeline.set_state(self.state)
             #self.set_audio_path('../data/sample.wav')
             print('play')
             self.state = Gst.State.PLAYING
             self.pipeline.set_state(self.state)
+            #loop.quit()
         elif message.type == Gst.MessageType.ERROR:
             err, debug = message.parse_error()
             sys.stderr.write("Error: %s: %s\n" % (err, debug))
+            self.state = Gst.State.NULL
+            self.pipeline.set_state(self.state)
             loop.quit()
 
     def __build_pipeline(self):
@@ -106,10 +121,8 @@ class AudioRTPStreamer():
 
 if __name__ == '__main__':
     streamer = AudioRTPStreamer()
-    wav_filepath = '../../data/long.wav'
-    #wav_filepath = sys.argv[1]
-    base_path = '../../data'
-    audio_list = ['short.wav', 'sample.wav', 'long.wav']
+    wav_filepath = './long.wav'
+    wav_filepath = sys.argv[1]
     streamer.set_audio_path(wav_filepath)
-    streamer.set_udp_destination('172.19.0.2', 5002)
+    streamer.set_udp_destination('172.23.0.2', 5002)
     streamer.run()
